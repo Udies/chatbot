@@ -4,49 +4,49 @@
   <meta charset="UTF-8">
   <title>צ'אט עם הבוט 🤖</title>
   <style>
-    body { 
-      direction: rtl; 
-      font-family: Arial; 
-      max-width: 600px; 
-      margin: 20px auto; 
+    body {
+      direction: rtl;
+      font-family: Arial;
+      max-width: 600px;
+      margin: 20px auto;
       padding: 20px;
     }
-    #chat { 
-      margin-bottom: 20px; 
-      border: 1px solid #ddd; 
-      padding: 15px; 
-      height: 400px; 
+    #chat {
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      height: 400px;
       overflow-y: auto;
       background: #f9f9f9;
     }
-    .message { 
-      margin: 10px 0; 
+    .message {
+      margin: 10px 0;
       padding: 8px;
       border-radius: 8px;
     }
-    .user { 
-      font-weight: bold; 
-      color: blue; 
+    .user {
+      font-weight: bold;
+      color: blue;
       background: #e3f2fd;
     }
-    .bot { 
-      font-weight: bold; 
-      color: green; 
+    .bot {
+      font-weight: bold;
+      color: green;
       background: #e8f5e8;
     }
     .error {
       color: red;
       background: #ffebee;
     }
-    #userInput { 
-      width: 70%; 
-      padding: 10px; 
+    #userInput {
+      width: 70%;
+      padding: 10px;
       font-size: 16px;
       border: 1px solid #ddd;
       border-radius: 4px;
     }
-    #sendBtn { 
-      padding: 10px 20px; 
+    #sendBtn {
+      padding: 10px 20px;
       font-size: 16px;
       background: #4CAF50;
       color: white;
@@ -68,41 +68,39 @@
   <div id="chat"></div>
   <input type="text" id="userInput" placeholder="כתוב הודעה...">
   <button id="sendBtn">שלח</button>
-  
+
   <script>
     async function sendMessage() {
       const input = document.getElementById("userInput");
       const chat = document.getElementById("chat");
       const sendBtn = document.getElementById("sendBtn");
       const userMessage = input.value.trim();
-      
+
       if (!userMessage) return;
-      
-      // הצגת ההודעה של המשתמש
+
       chat.innerHTML += `<div class="message user">אתה: ${userMessage}</div>`;
       input.value = "";
       sendBtn.disabled = true;
       sendBtn.textContent = "שולח...";
-      
-      // גלילה למטה
+
       chat.scrollTop = chat.scrollHeight;
-      
+
       try {
         const response = await fetch("http://localhost:5678/webhook/85f551b1-f407-456d-93cb-4dda1f95923e", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: userMessage })
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        // קבלת התגובה כטקסט רגיל (לא JSON)
-        const botReply = await response.text();
-        
+
+        const json = await response.json();
+        const botReply = json.message?.content || "❌ לא התקבלה תשובה מהבוט";
+
         chat.innerHTML += `<div class="message bot">בוט: ${botReply}</div>`;
-        
+
       } catch (error) {
         console.error('Error:', error);
         chat.innerHTML += `<div class="message error">❌ שגיאה: ${error.message}</div>`;
@@ -112,11 +110,8 @@
         chat.scrollTop = chat.scrollHeight;
       }
     }
-    
-    // לחיצה על כפתור
+
     document.getElementById("sendBtn").addEventListener("click", sendMessage);
-    
-    // לחיצה על Enter
     document.getElementById("userInput").addEventListener("keypress", function(e) {
       if (e.key === "Enter") {
         sendMessage();
